@@ -41,6 +41,8 @@ public class SimpleFSM : FSM {
 
 		if (!playerTransform)
 			Debug.LogError("Player does't exist");
+		else
+			print("find player");
 
 		turret = gameObject.transform.GetChild(0).transform;
 		bulletSpawnPoint = turret.GetChild(0).transform;
@@ -70,6 +72,7 @@ public class SimpleFSM : FSM {
 		destPos = pointList[rndIndex].transform.position + rndPosition;
 
 		if (IsInCurrentRange(destPos)) {
+			rndIndex = Random.Range(0, pointList.Length);
 			rndPosition = new Vector3(Random.Range(-rndRadius,rndRadius), 
 			                          0.0f, 
 			                          Random.Range(-rndRadius,rndRadius));
@@ -88,14 +91,16 @@ public class SimpleFSM : FSM {
 	}
 
 	protected void UpdatePatrolState() {
-		if (Vector3.Distance(transform.position, destPos) <= 100.0f) 
+		float destDist = Vector3.Distance(transform.position, destPos);
+		Debug.Log("dest Dist :"+destDist);
+		if (destDist <= 10.0f) 
 		{
 			print("["+ID+"] Reached to the destination point\n"+
 			      "calculating the next point");
 
 			FindNextPoint();
 
-		}else if (Vector3.Distance(transform.position, playerTransform.position) <= 300.0f) {
+		}else if (Vector3.Distance(transform.position, playerTransform.position) <= 30.0f) {
 			print("["+ID+"] Switch to Chase Position");
 			curState = FSMState.Chase;
 		}
@@ -115,9 +120,9 @@ public class SimpleFSM : FSM {
 
 		float dist = Vector3.Distance(transform.position, playerTransform.position);
 
-		if (dist <= 200.0f) {
+		if (dist <= 20.0f) {
 			curState = FSMState.Attack;
-		}else if (dist >= 300.0f) {
+		}else if (dist >= 30.0f) {
 			curState = FSMState.Patrol;
 		}
 
@@ -129,7 +134,7 @@ public class SimpleFSM : FSM {
 
 		float dist = Vector3.Distance(transform.position, playerTransform.position);
 
-		if (dist >= 200.0f && dist < 300.0f) {
+		if (dist >= 20.0f && dist < 30.0f) {
 			Quaternion targetRotation = Quaternion.LookRotation(destPos - transform.position);
 			transform.rotation = Quaternion.Slerp(transform.rotation,
 			                                      targetRotation,
@@ -137,7 +142,7 @@ public class SimpleFSM : FSM {
 
 			transform.Translate(Vector3.forward * Time.deltaTime * curSpeed);
 			curState = FSMState.Attack;
-		}else if (dist >= 300.0f) {
+		}else if (dist >= 30.0f) {
 			curState = FSMState.Patrol;
 		}
 
