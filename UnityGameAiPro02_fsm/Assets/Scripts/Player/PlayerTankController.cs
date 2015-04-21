@@ -13,7 +13,7 @@ public class PlayerTankController : MonoBehaviour {
 	private float maxBackwardSpeed = -15.0f;
 
 	protected float shootRate = 0.5f;
-	protected float elapsedTime;
+	protected float elapsedTime = 0.0f;
 	
 	// Use this for initialization
 	void Start () {
@@ -33,10 +33,10 @@ public class PlayerTankController : MonoBehaviour {
 
 	void UpdateWeapon() 
 	{
-		if (Input.GetMouseButtonDown(0)) 
-		{
-			elapsedTime += Time.deltaTime;
+		elapsedTime += Time.deltaTime;
 
+		if (Input.GetMouseButtonDown(0)) 
+		{ 
 			if (elapsedTime >= shootRate) {
 				// time reset
 				elapsedTime = 0.0f;
@@ -51,11 +51,11 @@ public class PlayerTankController : MonoBehaviour {
 		Plane playerPlane = new Plane(Vector3.up, transform.position + Vector3.zero);
 
 		Ray RayCast = Camera.main.ScreenPointToRay(Input.mousePosition);
-		Debug.Log("mouse pos : "+Input.mousePosition.ToString());
+		//Debug.Log("mouse pos : "+Input.mousePosition.ToString());
 		float HitDist = 0;
 
 		if (playerPlane.Raycast(RayCast, out HitDist)) {
-			Debug.Log("RayCast TRUE");
+			//Debug.Log("RayCast TRUE");
 			Vector3 RayHitPoint = RayCast.GetPoint(HitDist);
 
 			Quaternion targetRotation = Quaternion.LookRotation(RayHitPoint - transform.position);
