@@ -22,15 +22,20 @@ public class SimpleFSM : FSM {
 	private bool isDead;
 	private int health;
 
+	private float chaseRange;
+	private float attackRange;
+
 	protected override void Initialize() 
 	{
 		curState = FSMState.Patrol;
-		curSpeed = 1.0f;
-		curRotSpeed = 2.0f;
+		curSpeed = 5.0f;
+		curRotSpeed = 10.0f;
 		isDead = false;
 		elapsedTime = 0.0f;
 		shootRate = 3.0f;
 		health = 100;
+		chaseRange = 15.0f;
+		attackRange = 10.0f;
 
 		pointList = GameObject.FindGameObjectsWithTag("WanderPoint");
 
@@ -41,8 +46,6 @@ public class SimpleFSM : FSM {
 
 		if (!playerTransform)
 			Debug.LogError("Player does't exist");
-		else
-			print("find player");
 
 		turret = gameObject.transform.GetChild(0).transform;
 		bulletSpawnPoint = turret.GetChild(0).transform;
@@ -50,6 +53,7 @@ public class SimpleFSM : FSM {
 
 	protected override void FSMUpdate()
 	{
+		Debug.Log("STATE : "+curState.ToString());
 		switch(curState) 
 		{
 			case FSMState.Patrol: UpdatePatrolState(); break;
@@ -62,12 +66,16 @@ public class SimpleFSM : FSM {
 
 		if (health <= 0)
 			curState = FSMState.Dead;
+
+		if (transform.position.y != 0.0f) {
+			transform.position = new Vector3(transform.position.x, 0.0f, transform.position.z);
+		}
 	}
 
 	protected void FindNextPoint() {
 		print("["+ID+"] Finding next point");
 		int rndIndex = Random.Range(0, pointList.Length);
-		float rndRadius = 10.0f;
+		float rndRadius = 5.0f;
 		Vector3 rndPosition = Vector3.zero;
 		destPos = pointList[rndIndex].transform.position + rndPosition;
 
@@ -78,13 +86,15 @@ public class SimpleFSM : FSM {
 			                          Random.Range(-rndRadius,rndRadius));
 			destPos = pointList[rndIndex].transform.position + rndPosition;
 		}
+
+		Debug.Log("Next Point x:"+destPos.x+", z:"+destPos.z);
 	}
 
 	protected bool IsInCurrentRange(Vector3 pos) {
 		float xPos = Mathf.Abs(pos.x - transform.position.x);
 		float zPos = Mathf.Abs(pos.z - transform.position.z);
 
-		if (xPos <= 50 && zPos <= 50)
+		if (xPos <= 5 && zPos <= 5)
 			return true;
 
 		return false;
@@ -92,7 +102,8 @@ public class SimpleFSM : FSM {
 
 	protected void UpdatePatrolState() {
 		float destDist = Vector3.Distance(transform.position, destPos);
-		Debug.Log("dest Dist :"+destDist);
+		//Debug.Log("dest Dist :"+destDist);
+	
 		if (destDist <= 10.0f) 
 		{
 			print("["+ID+"] Reached to the destination point\n"+
@@ -100,7 +111,8 @@ public class SimpleFSM : FSM {
 
 			FindNextPoint();
 
-		}else if (Vector3.Distance(transform.position, playerTransform.position) <= 30.0f) {
+		}
+		else if (Vector3.Distance(transform.position, playerTransform.position) <= chaseRange) {
 			print("["+ID+"] Switch to Chase Position");
 			curState = FSMState.Chase;
 		}
@@ -120,9 +132,9 @@ public class SimpleFSM : FSM {
 
 		float dist = Vector3.Distance(transform.position, playerTransform.position);
 
-		if (dist <= 20.0f) {
+		if (dist <= attackRange) {
 			curState = FSMState.Attack;
-		}else if (dist >= 30.0f) {
+		}else if (dist >= chaseRange) {
 			curState = FSMState.Patrol;
 		}
 
@@ -134,7 +146,7 @@ public class SimpleFSM : FSM {
 
 		float dist = Vector3.Distance(transform.position, playerTransform.position);
 
-		if (dist >= 20.0f && dist < 30.0f) {
+		if (dist >= attackRange && dist < chaseRange) {
 			Quaternion targetRotation = Quaternion.LookRotation(destPos - transform.position);
 			transform.rotation = Quaternion.Slerp(transform.rotation,
 			                                      targetRotation,
@@ -142,7 +154,7 @@ public class SimpleFSM : FSM {
 
 			transform.Translate(Vector3.forward * Time.deltaTime * curSpeed);
 			curState = FSMState.Attack;
-		}else if (dist >= 30.0f) {
+		}else if (dist >= chaseRange) {
 			curState = FSMState.Patrol;
 		}
 
